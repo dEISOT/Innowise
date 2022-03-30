@@ -386,7 +386,7 @@ BEGIN
 END
 
 	--CARDS TRIGGER
-CREATE TRIGGER trigger_AccountBalance
+CREATE TRIGGER trigger_CardsBalance
 	ON Cards AFTER UPDATE
 	AS IF (UPDATE(Balance))
 BEGIN
