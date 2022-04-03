@@ -6,122 +6,125 @@ use BankList;
 
 CREATE TABLE Banks
 (
-BankID INT PRIMARY KEY IDENTITY,
-BankName NVARCHAR(15) NOT NULL
+Id INT PRIMARY KEY IDENTITY,
+Name NVARCHAR(15) NOT NULL
 )
 
 CREATE TABLE Filials
 (
-FilialID INT PRIMARY KEY IDENTITY,
+Id INT PRIMARY KEY IDENTITY,
 Adress NVARCHAR(30) NOT NULL,
-Bnk_ID INT,
-CONSTRAINT FK_Filial_To_Bank FOREIGN KEY (Bnk_ID) REFERENCES Banks (BankID) ON DELETE CASCADE
+BankId INT,
+CONSTRAINT FK_Filial_To_Bank FOREIGN KEY (BankId) REFERENCES Banks (Id) ON DELETE CASCADE
 )
 
 CREATE TABLE Towns
 (
-TownID INT PRIMARY KEY IDENTITY,
-TownName NVARCHAR(15) NOT NULL
+Id INT PRIMARY KEY IDENTITY,
+Name NVARCHAR(15) NOT NULL
 )
 
 CREATE TABLE Buildings
 (
-Fil_ID INT,
-Twn_ID INT,
-CONSTRAINT FK_Building_to_Filial FOREIGN KEY (Fil_ID) REFERENCES Filials (FilialID) ON DELETE CASCADE,
-CONSTRAINT FK_Building_To_Town FOREIGN KEY (Twn_ID) REFERENCES Towns (TownID) ON DELETE CASCADE
+FilialId INT,
+TownId INT,
+CONSTRAINT FK_Building_to_Filial FOREIGN KEY (FilialId) REFERENCES Filials (Id) ON DELETE CASCADE,
+CONSTRAINT FK_Building_To_Town FOREIGN KEY (TownId) REFERENCES Towns (Id) ON DELETE CASCADE
 )
 
 CREATE TABLE SocStatus
 (
-SocStatusID INT PRIMARY KEY IDENTITY,
+Id INT PRIMARY KEY IDENTITY,
 Name NVARCHAR(15) NOT NULL
 )
 
 CREATE TABLE Clients
 (
-ClientID INT PRIMARY KEY IDENTITY,
+Id INT PRIMARY KEY IDENTITY,
 Name NVARCHAR(20) NOT NULL,
 Surname NVARCHAR(30) NOT NULL,
 Patronymic NVARCHAR(30),
 Gender NVARCHAR(3) NOT NULL,
-SocSt_ID INT,
-CONSTRAINT FK_Clients_To_SocStatus FOREIGN KEY(SocSt_ID) REFERENCES SocStatus(SocStatusID)
+SocStatusId INT,
+CONSTRAINT FK_Clients_To_SocStatus FOREIGN KEY(SocStatusId) REFERENCES SocStatus(Id)
 )
 
 CREATE TABLE Accounts
 (
-AccountID INT PRIMARY KEY IDENTITY,
-Bnk_ID INT,
-Cl_ID INT,
+Id INT PRIMARY KEY IDENTITY,
+BankId INT,
+ClientId INT,
 Balance MONEY DEFAULT 0.0,
-CONSTRAINT FK_Account_To_Bank FOREIGN KEY (Bnk_ID) REFERENCES Banks (BankID) ON DELETE CASCADE,
-CONSTRAINT FK_Account_To_Client FOREIGN KEY (Cl_ID) REFERENCES Clients (ClientID) ON DELETE CASCADE,
-CONSTRAINT UQ_BankID_ClientID UNIQUE (Bnk_ID, Cl_ID)
+CONSTRAINT FK_Account_To_Bank FOREIGN KEY (BankId) REFERENCES Banks (Id) ON DELETE CASCADE,
+CONSTRAINT FK_Account_To_Client FOREIGN KEY (ClientId) REFERENCES Clients (Id) ON DELETE CASCADE,
+CONSTRAINT UQ_BankID_ClientID UNIQUE (BankId, ClientId)
 )
 
 CREATE TABLE Cards
 (
-CardID INT PRIMARY KEY IDENTITY,
+Id INT PRIMARY KEY IDENTITY,
 Balance MONEY DEFAULT 0.0,
-Ac_ID INT,
-CONSTRAINT FK_Cards_To_Account FOREIGN KEY (Ac_ID) REFERENCES Accounts (AccountID) ON DELETE CASCADE
+AccountId INT,
+CONSTRAINT FK_Cards_To_Account FOREIGN KEY (AccountId) REFERENCES Accounts (Id) ON DELETE CASCADE
 )
 
 
 
 INSERT INTO Towns (TownName)
-VALUES  ('Минск'),
-	    ('Москва'),
-		('Гомель'),
-		('Берлин'),
-		('Варшава');
+VALUES  (N'Минск'),
+	    (N'Москва'),
+		(N'Гомель'),
+		(N'Берлин'),
+		(N'Варшава');
+
 
 INSERT INTO Banks (BankName)
-VALUES	('АльфаБанк'),
-		('ТинькоффБанк'),
-		('БелагропромБанк'),
-		('БеларусьБанк'),
-		('ПриорБанк'),
-		('DeutscheBank'),
-		('СберБанк'),
-		('ТехноБанк'),
-		('IdeaBank'),
-		('BankPoscztowy');
+VALUES	(N'АльфаБанк'),
+		(N'ТинькоффБанк'),
+		(N'БелагропромБанк'),
+		(N'БеларусьБанк'),
+		(N'ПриорБанк'),
+		(N'DeutscheBank'),
+		(N'СберБанк'),
+		(N'ТехноБанк'),
+		(N'IdeaBank'),
+		(N'BankPoscztowy');
 
-INSERT INTO Filials(Adress, Bnk_ID)
-VALUES ('бульв.Гоголя,31',1),
-	   ('наб.Космонавтов,86',1),
-	   ('пл.Балканская,47',1),
-	   ('шос.Гоголя,76',2),
-	   ('пр.Ленина,39',2),
-	   ('ул.Домодедовская,78',2),
-	   ('ул.Бухарестская,89',3),
-	   ('пр.Сталина,41',3),
-	   ('ул.Ладыгина,86',3),
-	   ('пр.Гагарина,02',4),
-	   ('пер.Ленина,97',4),
-	   ('пер.1905 года,53',4),
-	   ('ул.Балканская,54',5),
-	   ('пр.Чехова,09',5),
-	   ('ул.Сталина,50',5),
-	   ('Straubplatz,34a',6),
-	   ('Marxallee,19',6),
-	   ('Blankweg,2',6),
-	   ('пр.Славы,77',7),
-	   ('пр.Гоголя,68',7),
-	   ('ул.Тараса Шевченко,45',7),
-	   ('ул.Артема,16',8),
-	   ('ул.Курчатова,8',8),
-	   ('ул.Заслонова,1г',8),
-	   ('Urocza,07',9),
-	   ('Bydgoska,39',9),
-	   ('Zakopiańska,35',9),
-	   ('Jodłowa,45A',10),
-	   ('Poprzeczna,97/09',10),
-	   ('Strzelecka,66',10);
 
-INSERT INTO Buildings(Fil_ID, Twn_ID)
+INSERT INTO Filials(Adress, BankId)
+VALUES (N'бульв.Гоголя,31',1),
+	   (N'наб.Космонавтов,86',1),
+	   (N'пл.Балканская,47',1),
+	   (N'шос.Гоголя,76',2),
+	   (N'пр.Ленина,39',2),
+	   (N'ул.Домодедовская,78',2),
+	   (N'ул.Бухарестская,89',3),
+	   (N'пр.Сталина,41',3),
+	   (N'ул.Ладыгина,86',3),
+	   (N'пр.Гагарина,02',4),
+	   (N'пер.Ленина,97',4),
+	   (N'пер.1905 года,53',4),
+	   (N'ул.Балканская,54',5),
+	   (N'пр.Чехова,09',5),
+	   (N'ул.Сталина,50',5),
+	   (N'Straubplatz,34a',6),
+	   (N'Marxallee,19',6),
+	   (N'Blankweg,2',6),
+	   (N'пр.Славы,77',7),
+	   (N'пр.Гоголя,68',7),
+	   (N'ул.Тараса Шевченко,45',7),
+	   (N'ул.Артема,16',8),
+	   (N'ул.Курчатова,8',8),
+	   (N'ул.Заслонова,1г',8),
+	   (N'Urocza,07',9),
+	   (N'Bydgoska,39',9),
+	   (N'Zakopiańska,35',9),
+	   (N'Jodłowa,45A',10),
+	   (N'Poprzeczna,97/09',10),
+	   (N'Strzelecka,66',10);
+
+
+INSERT INTO Buildings(FilialId, TownId)
 VALUES (1,1),
 	   (2,1),
 	   (3,1),
@@ -154,46 +157,48 @@ VALUES (1,1),
 	   (30,5);
 
 INSERT INTO SocStatus(Name)
-VALUES ('пенсионер'),
-	   ('инвалид'),
-	   ('безработн'),
-	   ('студент'),
-	   ('ребенок');
-
-INSERT INTO Clients(Name, Surname, Patronymic, Gender, SocSt_ID)
-VALUES ('Софья','Ермаковa','Львовна','жен',1),
-	   ('Игорь','Фролов','Владимирович','муж',2),
-	   ('Алиса','Фадеевa','Алексеевна','жен',3),
-	   ('Диана','Костинa','Александровна','жен',2),
-	   ('Татьяна','Васильевa','Максимовна','жен',3),
-	   ('Евгения','Капустинa','Андреевна','жен',5),
-	   ('Абрам','Кудряшов','Андреевич','муж',4),
-	   ('Александра','Исаковa','Александровна','жен',2),
-	   ('Илларион','Сысоев','Евгеньевич','муж',1),
-	   ('Тимофей','Дорофеев','Фёдорович','муж',3),
-	   ('Кирилл','Тарасов','Алексеевич','муж',4),
-	   ('Mikołaj','Bąk','','муж',1),
-	   ('Jan','Pawłowski','','муж',4),
-	   ('Antonina','Górecka','','жен',5),
-	   ('Jagoda','Pawłowska','','жен',1),
-	   ('Filip','Zakrzewski','','муж',2),
-	   ('Karolina','Marciniak','','жен',3),
-	   ('Фаина','Стрелкова','Алексеевна','жен',2),
-	   ('Betty','Neumann','','жен',2),
-	   ('Hanna','Eder','','жен',1),
-	   ('Antonia','Klaus','','жен',3),
-	   ('Евгения','Аксёновa','','жен',1),
-	   ('Виктор','Калашников','Владимирович','муж',1),
-	   ('Майя','Щукинa','Владимировна','жен',4),
-	   ('Надежда','Вишнякова','Фёдоровна','жен',2),
-	   ('Эдуард','Кудряшов','Дмитриевич','муж',3),
-	   ('Евгения','Кашняр','Романовна','жен',4),
-	   ('Екатерина','Мясникова','Алексеевна','жен',1),
-	   ('Тарас','Красильников','Дмитриевич','муж',5),
-	   ('Спартак','Белоусов','Дмитриевич','муж',1);
+VALUES (N'пенсионер'),
+	   (N'инвалид'),
+	   (N'безработн'),
+	   (N'студент'),
+	   (N'ребенок');
 
 
-INSERT INTO Accounts(Bnk_ID,Balance, Cl_ID)
+INSERT INTO Clients(Name, Surname, Patronymic, Gender, SocStatusId)
+VALUES (N'Софья','Ермаковa','Львовна','жен',1),
+	   (N'Игорь','Фролов','Владимирович','муж',2),
+	   (N'Алиса','Фадеевa','Алексеевна','жен',3),
+	   (N'Диана','Костинa','Александровна','жен',2),
+	   (N'Татьяна','Васильевa','Максимовна','жен',3),
+	   (N'Евгения','Капустинa','Андреевна','жен',5),
+	   (N'Абрам','Кудряшов','Андреевич','муж',4),
+	   (N'Александра','Исаковa','Александровна','жен',2),
+	   (N'Илларион','Сысоев','Евгеньевич','муж',1),
+	   (N'Тимофей','Дорофеев','Фёдорович','муж',3),
+	   (N'Кирилл','Тарасов','Алексеевич','муж',4),
+	   (N'Mikołaj','Bąk','','муж',1),
+	   (N'Jan','Pawłowski','','муж',4),
+	   (N'Antonina','Górecka','','жен',5),
+	   (N'Jagoda','Pawłowska','','жен',1),
+	   (N'Filip','Zakrzewski','','муж',2),
+	   (N'Karolina','Marciniak','','жен',3),
+	   (N'Фаина','Стрелкова','Алексеевна','жен',2),
+	   (N'Betty','Neumann','','жен',2),
+	   (N'Hanna','Eder','','жен',1),
+	   (N'Antonia','Klaus','','жен',3),
+	   (N'Евгения','Аксёновa','','жен',1),
+	   (N'Виктор','Калашников','Владимирович','муж',1),
+	   (N'Майя','Щукинa','Владимировна','жен',4),
+	   (N'Надежда','Вишнякова','Фёдоровна','жен',2),
+	   (N'Эдуард','Кудряшов','Дмитриевич','муж',3),
+	   (N'Евгения','Кашняр','Романовна','жен',4),
+	   (N'Екатерина','Мясникова','Алексеевна','жен',1),
+	   (N'Тарас','Красильников','Дмитриевич','муж',5),
+	   (N'Спартак','Белоусов','Дмитриевич','муж',1);
+
+
+
+INSERT INTO Accounts(BankId,Balance, ClientId)
 VALUES (1,1566,1),
 	   (1,0,2),
 	   (1,0,3),
@@ -225,7 +230,7 @@ VALUES (1,1566,1),
 	   (10,200,16),
 	   (10,562,17);
 
-INSERT INTO Cards(Balance,Ac_ID)
+INSERT INTO Cards(Balance,AccountId)
 VALUES (320,1),
 	   (200,1),
 	   (200,1),
@@ -277,79 +282,84 @@ VALUES (320,1),
 
 	--Query 1
 
-SELECT BankName, TownName
+SELECT Banks.Name, Towns.Name
 FROM Banks
-INNER JOIN Filials ON Banks.BankID = Filials.Bnk_ID
-INNER JOIN Buildings ON Filials.FilialID = Buildings.Fil_ID
-INNER JOIN Towns ON Buildings.Twn_ID = Towns.TownID
-GROUP BY BankName, TownName
-HAVING TownName = 'Минск'; 
+INNER JOIN Filials ON Banks.Id = Filials.BankId
+INNER JOIN Buildings ON Filials.Id = Buildings.FilialId
+INNER JOIN Towns ON Buildings.TownId = Towns.Id
+GROUP BY Banks.Name, Towns.Name
+HAVING Towns.Name = 'Минск'; 
 
 	--Query 2
 
-SELECT BankName, CardID, AccountID, Name, Cards.Balance AS Card_Balance, Accounts.Balance AS Ac_Balance
+SELECT Banks.Name, Cards.Id, Accounts.Id, Clients.Name, Cards.Balance AS Card_Balance, Accounts.Balance AS Account_Balance
 FROM Banks
-INNER JOIN Accounts ON Accounts.Bnk_ID = Banks.BankID 
-INNER JOIN Clients ON Accounts.Cl_ID = Clients.ClientID
-INNER JOIN Cards ON Cards.Ac_ID = Accounts.AccountID;
+INNER JOIN Accounts ON Accounts.BankId = Banks.Id 
+INNER JOIN Clients ON Accounts.ClientId = Clients.Id
+INNER JOIN Cards ON Cards.AccountId = Accounts.Id;
 
 
 	--Query 3
 
-SELECT AccountID, Accounts.Balance, SUM(Cards.Balance) AS Summa, Accounts.Balance - SUM(Cards.Balance) as dif
-FROM Accounts INNER JOIN Cards ON Ac_ID= AccountID
-GROUP BY AccountID, Accounts.Balance
+SELECT Accounts.Id, Accounts.Balance, SUM(Cards.Balance) AS Summa, Accounts.Balance - SUM(Cards.Balance) as dif
+FROM Accounts INNER JOIN Cards ON AccountId = Accounts.Id
+GROUP BY Accounts.Id, Accounts.Balance
 HAVING SUM(Cards.Balance) != Accounts.Balance
 
 	--Query 4a
 
 SELECT SocStatus.Name, COUNT(*) AS CardsAmount
 FROM Clients
-INNER JOIN Accounts ON ClientID = Cl_ID
-INNER JOIN SocStatus ON SocSt_ID = SocStatusID
-INNER JOIN Cards ON AccountID = Ac_ID
+INNER JOIN Accounts ON ClientID = Clients.Id
+INNER JOIN SocStatus ON SocStatus.Id = SocStatusID
+INNER JOIN Cards ON AccountID = Accounts.Id
 GROUP BY SocStatus.Name;
 
-	--Query 4b  -
+	--Query 4b 
+
 
 	--Query 5
 
-CREATE PROCEDURE Calculating
-	@status INT
+CREATE PROCEDURE AccrualForSocStatus
+@status NVARCHAR
 AS
 BEGIN
 UPDATE Accounts
 SET Balance = Balance + 10
 FROM Accounts
-	INNER JOIN Clients ON Cl_ID = ClientID
-WHERE SocSt_ID = @status
+	INNER JOIN Clients ON Clients.Id = ClientID
+	INNER JOIN SocStatus ON SocStatusId = SocStatus.Id
+WHERE SocStatus.Name = @status
 END
 GO
+
 
 	--Query 6
 
 SELECT AccountID, Accounts.Balance, SUM(Cards.Balance) AS Summa,
 (Accounts.Balance - SUM(Cards.Balance))/COUNT(Cards.Balance) AS AvailableFunds
-FROM Accounts INNER JOIN Cards on Ac_ID = AccountID
+FROM Accounts INNER JOIN Cards on Accounts.Id = AccountID
 GROUP BY AccountID, Accounts.Balance
 HAVING Accounts.Balance - SUM(Cards.Balance) > 0
 
 	--Query 7
 
-CREATE PROCEDURE MTransfer
+CREATE PROCEDURE Transfer
 @amount MONEY,
-@AccID INT,
-@CrdID INT,
-@Id INT
+@CrdID INT
 AS
 DECLARE @sumCards MONEY;
 SET @sumCards = (SELECT SUM(Cards.Balance)
-			FROM Accounts INNER JOIN Cards ON Ac_ID = AccountID
-			WHERE AccountID = @AccID);
+				 FROM Accounts INNER JOIN Cards ON Accounts.Id = AccountID
+				 WHERE Accounts.Id = (SELECT AccountId
+									  FROM Cards 
+									  WHERE Cards.Id = @CrdID));
 DECLARE @AccBlnc MONEY;
 SET @AccBlnc = (SELECT Accounts.Balance
 				FROM Accounts
-				WHERE AccountID = @AccID);
+				WHERE Accounts.Id = (SELECT AccountId
+									 FROM Cards 
+									 WHERE Cards.Id = @CrdID));
 DECLARE @diff MONEY;
 SET @diff = @AccBlnc - @sumCards;
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE 
@@ -357,7 +367,7 @@ BEGIN TRANSACTION
 IF (@diff >= @amount)
 	UPDATE Cards
 	SET Balance = Balance + @amount
-	WHERE CardID = @CrdID
+	WHERE Cards.Id = @CrdID
 ELSE
 	ROLLBACK TRANSACTION
 IF (@@error <> 0)
@@ -373,12 +383,12 @@ CREATE TRIGGER trigger_AccountBalance
 BEGIN
 	DECLARE @sumCards MONEY;
 	SET @sumCards = (SELECT SUM(Cards.Balance)
-			FROM deleted d INNER JOIN Cards ON d.AccountID = Ac_ID
-			WHERE AccountID = d.AccountID)
+			FROM deleted d INNER JOIN Cards ON d.Id = AccountId
+			WHERE AccountID = d.Id)
 	DECLARE @NewAccBlnc MONEY;
 	SET @NewAccBlnc = (SELECT i.Balance
 				FROM inserted i
-				WHERE AccountID = i.AccountID);
+				WHERE Id = i.Id);
 	IF (@NewAccBlnc < @sumCards)
 	BEGIN
 		ROLLBACK TRANSACTION
@@ -392,12 +402,12 @@ CREATE TRIGGER trigger_CardsBalance
 BEGIN
 	DECLARE @NewSumCards MONEY;
 	SET @NewSumCards = (SELECT SUM(i.Balance)
-			FROM inserted i INNER JOIN Accounts ON i.Ac_ID = AccountID
-			WHERE i.Ac_ID = AccountID);
+			FROM inserted i INNER JOIN Accounts ON i.AccountId = AccountID
+			WHERE i.AccountId = AccountID);
 	DECLARE @AccBlnc MONEY;
 	SET @AccBlnc = (SELECT Accounts.Balance 
-					FROM inserted i INNER JOIN Accounts ON i.Ac_ID = AccountID
-					WHERE i.Ac_ID = AccountID);
+					FROM inserted i INNER JOIN Accounts ON i.AccountId = AccountID
+					WHERE i.AccountId = AccountID);
 	IF (@NewSumCards > @AccBlnc)
 	BEGIN
 		ROLLBACK TRANSACTION
