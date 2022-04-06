@@ -70,7 +70,7 @@ CONSTRAINT FK_Cards_To_Account FOREIGN KEY (AccountId) REFERENCES Accounts (Id) 
 
 
 
-INSERT INTO Towns (TownName)
+INSERT INTO Towns (Name)
 VALUES  (N'Минск'),
 	    (N'Москва'),
 		(N'Гомель'),
@@ -78,7 +78,7 @@ VALUES  (N'Минск'),
 		(N'Варшава');
 
 
-INSERT INTO Banks (BankName)
+INSERT INTO Banks (Name)
 VALUES	(N'АльфаБанк'),
 		(N'ТинькоффБанк'),
 		(N'БелагропромБанк'),
@@ -282,13 +282,13 @@ VALUES (320,1),
 
 	--Query 1
 
-SELECT Banks.Name, Towns.Name
+SELECT DISTINCT Banks.Name, Towns.Name
 FROM Banks
 INNER JOIN Filials ON Banks.Id = Filials.BankId
 INNER JOIN Buildings ON Filials.Id = Buildings.FilialId
 INNER JOIN Towns ON Buildings.TownId = Towns.Id
-GROUP BY Banks.Name, Towns.Name
-HAVING Towns.Name = 'Минск'; 
+WHERE Towns.Name = 'Минск'
+
 
 	--Query 2
 
