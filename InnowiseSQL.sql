@@ -292,7 +292,7 @@ WHERE Towns.Name = 'Минск'
 
 	--Query 2
 
-SELECT Banks.Name, Cards.Id, Accounts.Id, Clients.Name, Cards.Balance AS Card_Balance, Accounts.Balance AS Account_Balance
+SELECT Banks.Name, Cards.Id AS CardId, Accounts.Id AS AccountId, Clients.Name, Cards.Balance AS Card_Balance, Accounts.Balance AS Account_Balance
 FROM Banks
 INNER JOIN Accounts ON Accounts.BankId = Banks.Id 
 INNER JOIN Clients ON Accounts.ClientId = Clients.Id
@@ -301,7 +301,7 @@ INNER JOIN Cards ON Cards.AccountId = Accounts.Id;
 
 	--Query 3
 
-SELECT Accounts.Id, Accounts.Balance, SUM(Cards.Balance) AS Summa, Accounts.Balance - SUM(Cards.Balance) as dif
+SELECT Accounts.Id, Accounts.Balance, SUM(Cards.Balance) AS Summa, Accounts.Balance - SUM(Cards.Balance) as difference
 FROM Accounts INNER JOIN Cards ON AccountId = Accounts.Id
 GROUP BY Accounts.Id, Accounts.Balance
 HAVING SUM(Cards.Balance) != Accounts.Balance
@@ -320,30 +320,44 @@ GROUP BY SocStatus.Name;
 
 	--Query 5
 
+GO
 CREATE PROCEDURE AccrualForSocStatus
-@status NVARCHAR
+	(@status NVARCHAR(15))
 AS
-BEGIN
-UPDATE Accounts
-SET Balance = Balance + 10
-FROM Accounts
-	INNER JOIN Clients ON Clients.Id = ClientID
-	INNER JOIN SocStatus ON SocStatusId = SocStatus.Id
-WHERE SocStatus.Name = @status
+	BEGIN
+	UPDATE Accounts
+	SET Balance = Balance + 10
+	FROM Accounts
+		INNER JOIN Clients ON Clients.Id = ClientID
+		INNER JOIN SocStatus ON SocStatusId = SocStatus.Id
+	WHERE SocStatus.Name = @status
 END
 GO
+	--Test query 5
 
+SELECT a.Balance, s.Name
+FROM Accounts a
+		INNER JOIN Clients ON Clients.Id = ClientID
+		INNER JOIN SocStatus s ON SocStatusId = s.Id
+WHERE s.NAME = 'пенсионер'
+
+EXEC AccrualForSocStatus @status = 'пенсионер';
+
+SELECT a.Balance, s.Name
+FROM Accounts a
+		INNER JOIN Clients ON Clients.Id = ClientID
+		INNER JOIN SocStatus s ON SocStatusId = s.Id
+WHERE s.NAME = 'пенсионер'
 
 	--Query 6
 
-SELECT AccountID, Accounts.Balance, SUM(Cards.Balance) AS Summa,
-(Accounts.Balance - SUM(Cards.Balance))/COUNT(Cards.Balance) AS AvailableFunds
+SELECT AccountID, Accounts.Balance, SUM(Cards.Balance) AS CardsSum, COUNT(Cards.Balance) AS CardsAmount,
+(Accounts.Balance - SUM(Cards.Balance)) AS AvailableFunds
 FROM Accounts INNER JOIN Cards on Accounts.Id = AccountID
 GROUP BY AccountID, Accounts.Balance
-HAVING Accounts.Balance - SUM(Cards.Balance) > 0
 
 	--Query 7
-
+GO
 CREATE PROCEDURE Transfer
 @amount MONEY,
 @CrdID INT
@@ -373,10 +387,34 @@ ELSE
 IF (@@error <> 0)
 	ROLLBACK
 COMMIT TRANSACTION
+GO
+
+	--Test Query 7
+	--Check AvailableFunds for accounts and choose one of the (for example it will be AccountId(16) and CardId(40))
+
+SELECT AccountID, Accounts.Balance, SUM(Cards.Balance) AS CardsSum, COUNT(Cards.Balance) AS CardsAmount,
+(Accounts.Balance - SUM(Cards.Balance)) AS AvailableFunds
+FROM Accounts INNER JOIN Cards on Accounts.Id = AccountID
+GROUP BY AccountID, Accounts.Balance
+
+	--Executing procedure (628 > 128)
+EXEC Transfer @amount = 128, @CrdID = 40
+
+	--Check AvailableFunds for id = 16, all works
+SELECT AccountID, Accounts.Balance, SUM(Cards.Balance) AS CardsSum, COUNT(Cards.Balance) AS CardsAmount,
+(Accounts.Balance - SUM(Cards.Balance)) AS AvailableFunds
+FROM Accounts INNER JOIN Cards on Accounts.Id = AccountID
+GROUP BY AccountID, Accounts.Balance
+
+	--Attempt to transfer more moneн than AvailableFunds
+EXEC Transfer @amount = 600, @CrdID = 40
+	--We got error, all works good
+
+
 
 	--Query 8
 	--ACCOUNTS TRIGGER
-
+GO
 CREATE TRIGGER trigger_AccountBalance
 	ON Accounts AFTER UPDATE
 	AS IF (UPDATE(Balance))
@@ -394,23 +432,63 @@ BEGIN
 		ROLLBACK TRANSACTION
 	END
 END
+GO
+
+	--Test accounts trigger 
+
+	--Example on accountid = 1
+SELECT AccountID, Accounts.Balance, SUM(Cards.Balance) AS CardsSum, COUNT(Cards.Balance) AS CardsAmount,
+(Accounts.Balance - SUM(Cards.Balance)) AS AvailableFunds
+FROM Accounts INNER JOIN Cards on Accounts.Id = AccountID
+GROUP BY AccountID, Accounts.Balance
+HAVING AccountId = 1
+
+	--As we can see, he has accountBalance(1566.0) > cardsSum(1120.0)
+	--But we can`t update it for less than 1120.0
+UPDATE Accounts
+SET Balance = 1000
+WHERE Id = 1
+	--The transaction ended in the trigger. The bitch has been aborted
 
 	--CARDS TRIGGER
+DROP Trigger trigger_CardsBalance
+
+GO
 CREATE TRIGGER trigger_CardsBalance
 	ON Cards AFTER UPDATE
 	AS IF (UPDATE(Balance))
 BEGIN
 	DECLARE @NewSumCards MONEY;
 	SET @NewSumCards = (SELECT SUM(i.Balance)
-			FROM inserted i INNER JOIN Accounts ON i.AccountId = AccountID
-			WHERE i.AccountId = AccountID);
+			FROM inserted i INNER JOIN Accounts ON i.AccountId = Accounts.Id
+			WHERE Accounts.Id = i.AccountId);
 	DECLARE @AccBlnc MONEY;
 	SET @AccBlnc = (SELECT Accounts.Balance 
-					FROM inserted i INNER JOIN Accounts ON i.AccountId = AccountID
-					WHERE i.AccountId = AccountID);
+					FROM inserted i INNER JOIN Accounts ON i.AccountId = Accounts.Id
+					WHERE Accounts.Id = i.AccountId);
 	IF (@NewSumCards > @AccBlnc)
 	BEGIN
 		ROLLBACK TRANSACTION
 	END
 END
+GO
 
+	--Test 
+	--we will take cardid = 1. It belongs to accountId = 1
+SELECT Accounts.Id AS AccountId, Accounts.Balance AS Account_Balance, Cards.Id AS CardId, Cards.Balance AS Card_Balance
+FROM Banks
+INNER JOIN Accounts ON Accounts.BankId = Banks.Id 
+INNER JOIN Clients ON Accounts.ClientId = Clients.Id
+INNER JOIN Cards ON Cards.AccountId = Accounts.Id
+WHERE Accounts.Id = 1
+
+UPDATE Cards
+SET Balance = 2020
+WHERE Id = 1
+	--"The transaction ended in the trigger. The bitch has been aborted"
+
+	--Attempt to update card balance by following the rules
+UPDATE Cards
+SET Balance = 119
+WHERE Id = 1
+	--1 row affected
