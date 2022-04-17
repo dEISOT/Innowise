@@ -364,26 +364,18 @@ FROM Accounts INNER JOIN Cards on Accounts.Id = AccountID
 GROUP BY AccountID, Accounts.Balance
 
 	--Query 7
+DROP PROCEDURE Transfer
 GO
 CREATE PROCEDURE Transfer
 @amount MONEY,
 @CrdID INT
 AS
 DECLARE @diff MONEY;
-SET @diff =  (SELECT Accounts.Balance --Account balance
-			  FROM Accounts
+SET @diff =  (SELECT Accounts.Balance - SUM(Cards.Balance) 
+			  FROM Accounts INNER JOIN Cards ON Accounts.Id = AccountID
 		      WHERE Accounts.Id = (SELECT AccountId
 		   						   FROM Cards 
 								   WHERE Cards.Id = @CrdID))
-
-			 -
-
-			 --CardsSum
-			(SELECT SUM(Cards.Balance) 
-			 FROM Accounts INNER JOIN Cards ON Accounts.Id = AccountID
-			 WHERE Accounts.Id = (SELECT AccountId
-								  FROM Cards 
-								  WHERE Cards.Id = @CrdID))
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE 
 BEGIN TRANSACTION
 IF (@diff >= @amount)
