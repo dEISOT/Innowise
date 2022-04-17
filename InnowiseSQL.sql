@@ -317,6 +317,13 @@ GROUP BY SocStatus.Name;
 
 	--Query 4b 
 
+SELECT o.Name, Amount = (SELECT COUNT(*)
+					     FROM Cards INNER JOIN Accounts a ON AccountId = a.Id
+					     INNER JOIN Clients ON ClientId = Clients.Id
+					     INNER JOIN SocStatus i ON i.Id = SocStatusId
+						 WHERE o.Id = i.Id)
+FROM SocStatus o
+ORDER BY o.Name
 
 	--Query 5
 
