@@ -369,20 +369,21 @@ CREATE PROCEDURE Transfer
 @amount MONEY,
 @CrdID INT
 AS
-DECLARE @sumCards MONEY;
-SET @sumCards = (SELECT SUM(Cards.Balance)
-				 FROM Accounts INNER JOIN Cards ON Accounts.Id = AccountID
-				 WHERE Accounts.Id = (SELECT AccountId
-									  FROM Cards 
-									  WHERE Cards.Id = @CrdID));
-DECLARE @AccBlnc MONEY;
-SET @AccBlnc = (SELECT Accounts.Balance
-				FROM Accounts
-				WHERE Accounts.Id = (SELECT AccountId
-									 FROM Cards 
-									 WHERE Cards.Id = @CrdID));
 DECLARE @diff MONEY;
-SET @diff = @AccBlnc - @sumCards;
+SET @diff =  (SELECT Accounts.Balance --Account balance
+			  FROM Accounts
+		      WHERE Accounts.Id = (SELECT AccountId
+		   						   FROM Cards 
+								   WHERE Cards.Id = @CrdID))
+
+			 -
+
+			 --CardsSum
+			(SELECT SUM(Cards.Balance) 
+			 FROM Accounts INNER JOIN Cards ON Accounts.Id = AccountID
+			 WHERE Accounts.Id = (SELECT AccountId
+								  FROM Cards 
+								  WHERE Cards.Id = @CrdID))
 SET TRANSACTION ISOLATION LEVEL SERIALIZABLE 
 BEGIN TRANSACTION
 IF (@diff >= @amount)
@@ -421,6 +422,8 @@ EXEC Transfer @amount = 600, @CrdID = 40
 
 	--Query 8
 	--ACCOUNTS TRIGGER
+DROP Trigger trigger_AccountBalance
+
 GO
 CREATE TRIGGER trigger_AccountBalance
 	ON Accounts AFTER UPDATE
@@ -455,7 +458,7 @@ HAVING AccountId = 1
 UPDATE Accounts
 SET Balance = 1000
 WHERE Id = 1
-	--The transaction ended in the trigger. The bitch has been aborted
+	--The transaction ended in the trigger. The batch has been aborted
 
 	--CARDS TRIGGER
 DROP Trigger trigger_CardsBalance
@@ -492,7 +495,7 @@ WHERE Accounts.Id = 1
 UPDATE Cards
 SET Balance = 2020
 WHERE Id = 1
-	--"The transaction ended in the trigger. The bitch has been aborted"
+	--"The transaction ended in the trigger. The batch has been aborted"
 
 	--Attempt to update card balance by following the rules
 UPDATE Cards
